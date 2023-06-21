@@ -69,11 +69,13 @@ serve(async (req) => {
     const periodDefinition = globals.GlobalsResults.PeriodDefinitions.PeriodDefinition
     const weekly = timetable.StudentTimetableResults.Students.Student.TimetableData[`W${week}`]
 
+    
     const daysOfTheWeek = [weekly['D1'], weekly['D2'], weekly['D3'], weekly['D4'], weekly['D5']]
+    
     const weeklyPlan = daysOfTheWeek.map(
       day => day.split('|').map(
         (period, index) => {
-          const definition = periodDefinition[index]
+          const definition = periodDefinition[index-1]
           return [definition ? definition.PeriodName : null, definition ? definition.PeriodTime : null, ...period.split('-')]
         }
       ).filter(period => period[0])
