@@ -13,9 +13,18 @@ serve(async (req) => {
     return new Response("get timetable data by sending a POST request with portal, studentID and password data in the body")
   }
   // This is needed if you're planning to invoke your function from a browser.
-  try {
-    const params = await req.json();
-    const { portal, studentID, password } = params;
+  // try {
+    const requestURL = new URL(req.url);
+    const po: Record<string, string | number | boolean> = {};
+    for (const p of requestURL.searchParams) { 
+      po[p[0]] = p[1];
+    }
+    
+
+    console.log(requestURL.searchParams)
+    const { portal, studentID, password } = po;
+    console.table({ portal, studentID, password })
+
     const url = `https://${portal}/api/api.php`
 
     async function sendCommand(command: string, body) {
@@ -37,18 +46,18 @@ serve(async (req) => {
       return json
     }
 
-
     let res = await sendCommand("Logon", {
       'Username': studentID,
       'Password': password
     })
 
+    console.log(res)
     const key = res.LogonResults.Key
 
     const globals = await sendCommand("GetGlobals", {
       Key: key
     })
-
+    
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), 0);
     const dayOfYear = Math.floor((today - firstDay) / 1000 / 60 / 60 / 24) + 1;
@@ -58,6 +67,7 @@ serve(async (req) => {
       Year: today.getFullYear()
     })
 
+    console.log(calendar)
     const week = calendar.CalendarResults.Days.Day[dayOfYear].WeekYear
 
     const timetable = await sendCommand("GetStudentTimetable", {
@@ -85,11 +95,11 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-  } catch (error) {
-    console.log('womp womp')
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
-  }
+  // } catch (error) {
+  //   console.log('womp womp')
+  //   return new Response(JSON.stringify({ error: error.message }), {
+  //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  //     status: 400,
+  //   })
+  // }
 })
